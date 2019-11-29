@@ -33,10 +33,12 @@ app.post('/coordinate', (req, res) => {
   const name = req.body.name
   const data = JSON.stringify(req.body)
   const exists = fs.existsSync(`data/interval/${name}.json`) // 检查文件是否已经存在
-  const addIntervalFile = name => fs.appendFile(`data/interval/${name}.json`, data, (err) => {
+
+  const addIntervalFile = name => fs.appendFile(`data/interval/${name}.json`, data, err => {
     if (err) throw err
     console.log('线网数据已添加到文件')
   })
+
   if (exists) {
     const fd = fs.openSync(`data/interval/${name}.json`, 'r+')
     fs.ftruncate(fd, err => { // 如文件存在，清空文件内容
@@ -57,7 +59,7 @@ app.post('/site', (req, res) => {
   const data = JSON.stringify(req.body)
   const exists = fs.existsSync(`data/site/${name}.json`) // 检查文件是否已经存在
 
-  const addSiteFile = name => fs.appendFile(`data/site/${name}.json`, data, (err) => {
+  const addSiteFile = name => fs.appendFile(`data/site/${name}.json`, data, err => {
     if (err) throw err
     console.log('工点数据已添加到文件')
   })
