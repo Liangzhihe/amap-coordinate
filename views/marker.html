@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, user-scalable=no, width=device-width"
+    />
+    <title>获取点的经纬度坐标</title>
+    <link
+      rel="stylesheet"
+      href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+    />
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+      #app,
+      #container {
+        width: 100%;
+        height: 100%;
+      }
+
+      .form {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        padding: 1rem;
+        min-width: 26rem;
+        background-color: #fff;
+        border-radius: 0.4rem;
+        box-shadow: 0 2px 6px 0 rgba(114, 124, 245, .5);
+      }
+      .btn {
+        float: right;
+      }
+    </style>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
+    <script src="https://cdn.bootcss.com/element-ui/2.12.0/index.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.19.0-beta.1/axios.js"></script>
+    <script src="https://cdn.bootcss.com/lodash.js/4.17.15/lodash.core.js"></script>
+    <script
+      type="text/javascript"
+      src="https://webapi.amap.com/maps?v=1.4.15&key=bd4991315e6c4dc4d9b8d030031b2de4&plugin=AMap.Geocoder"
+    ></script>
+  </head>
+
+  <div id="app">
+    <div id="container"></div>
+    <div class="form">
+      <el-form
+        ref="form"
+        :model="form"
+        :rules="rules"
+        label-position="right"
+        label-width="80px" 
+      >
+        <el-form-item prop="name" label="工点名称">
+          <el-input v-model="form.name" size="medium" placeholder="工点名称"></el-input>
+        </el-form-item>
+        <el-form-item prop="type" label="工点类型">
+          <el-input v-model="form.type" size="medium" placeholder="工点类型"></el-input>
+        </el-form-item>
+        <el-form-item prop="line" label="所属线路">
+          <el-input v-model="form.line" size="medium" placeholder="所属线路"></el-input>
+        </el-form-item>
+        <el-form-item label="经纬度">
+          <el-input v-model="form.positionString" size="medium" placeholder="点击地图位置自动填入" :disabled="true">
+              <!-- <template slot="prepend">经纬度</template> -->
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <el-button class="btn" type="primary" size="small" @click="save">上传工点</el-button>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    const center = [114.15597366, 22.5605355]
+    const zoom = 14
+
+    const app = new Vue({
+      el: '#app',
+      data: {
+        map: null,
+        form: {
+          name: '',
+          type: '',
+          line: '',
+          position: [],
+          positionString: ''
+        },
+        rules: {
+          name: [
+            { required: true, message: '工点名称不能为空', trigger: 'blur' }
+          ],
+          type: [
+            { required: true, message: '工点类型不能为空', trigger: 'blur' }
+          ],
+          line: [
+            { required: true, message: '所属线路不能为空', trigger: 'blur' }
+          ]
+        }
+      },
+      mounted() {
+        this.initMap()
+        this.initEvent()
+      },
+
+      methods: {
+        initMap() {
+          this.map = new AMap.Map('container', { center, zoom })
+        },
+        initEvent() {
+          this.map.on('click', e => {
+            this.form.position = e.lnglat
+            this.form.positionString = e.lnglat.toString()
+          })
+        },
+        save() {
+          if (this.form.positionString === '') {
+            this.$notify.warning({
+              title: 'UPLOAD ERROR',
+              message: '请先点击地图获取工点经纬度'
+            })
+            return
+          }
+          axios
+            .post('/site', {
+              name: this.form.name,
+              type: this.form.type,
+              line: this.form.line,
+              position: this.form.position
+            })
+            .then(resp => {
+              console.log(resp)
+              this.$notify.success({
+                title: 'UPLOAD SUCCESS',
+              })
+              this.form.name = ''
+              this.form.type = ''
+              this.form.line = ''
+              this.form.position = ''
+            })
+            .catch(err => {
+              this.$notify.error({
+                title: 'UPLOAD ERROR',
+                message: err
+              })
+              console.log(err)
+            })
+        }
+      }
+    })
+  </script>
+</html>

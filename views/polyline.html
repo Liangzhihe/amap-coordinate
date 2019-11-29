@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    #app, #container {
+      width: 100%;
+      height: 100%;
+    }
+    .dialog-input {
+      margin-bottom: 10px;
+    }
+  </style>
+  <title>折线的绘制和编辑</title>
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
+  <script src="https://cdn.bootcss.com/element-ui/2.12.0/index.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.19.0-beta.1/axios.js"></script>
+  <script src="https://cdn.bootcss.com/lodash.js/4.17.15/lodash.core.js"></script>
+  <script src="https://webapi.amap.com/maps?v=1.4.15&key=bd4991315e6c4dc4d9b8d030031b2de4&plugin=AMap.PolyEditor"></script>
+  <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="container"></div>
+    <div class="input-card" style="width: 120px">
+      <button class="btn" @click="openEditor" style="margin-bottom: 5px">开始编辑</button>
+      <button class="btn" @click="closeEditor" style="margin-bottom: 5px">结束编辑</button>
+      <button class="btn" @click="refresh">刷新页面</button>
+    </div>
+
+    <el-dialog
+      title="填写区间信息(折线)"
+      :visible.sync="centerDialogVisible"
+      width="30%"
+      center>
+      <el-form
+        ref="form"
+        :model="form"
+        :rules="rules"
+        label-position="right"
+        label-width="80px"
+      >
+        <el-form-item  prop="name" label="区间名称">
+          <el-input
+            v-model="form.name"
+            size="medium"
+            placeholder="区间名称"
+          ></el-input>
+        </el-form-item>
+        <el-form-item  prop="start" label="区间起点">
+          <el-input
+            v-model="form.start"
+            size="medium"
+            placeholder="区间起点"
+          ></el-input>
+        </el-form-item>
+        <el-form-item  prop="end" label="区间终点">
+          <el-input
+            v-model="form.end"
+            size="medium"
+            placeholder="区间终点"
+          ></el-input>
+        </el-form-item>
+        <el-form-item  prop="line" label="所属线路">
+          <el-input
+            v-model="form.line"
+            size="medium"
+            placeholder="所属线路"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="centerDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="save">确 定</el-button>
+      </span>
+    </el-dialog>
+
+  </div>
+  <script>
+    // 默认中心点、缩放比例、区间起终点
+    const center = [114.15597366, 22.5605355]
+    const zoom = 14
+    const path = [
+      [114.15597366, 22.5505355],
+      [114.15597366, 22.5405355]
+    ]
+
+    const app = new Vue({
+      el: '#app',
+      data: {
+        map: null,
+        polyline: null,
+        polyEditor: null,
+        centerDialogVisible: false,
+        form: {
+          name:  '',
+          start: '',
+          end:   '',
+          line:  '',
+        },
+        rules: {
+          name:  [{ required: true, message: '区间名称不能为空', trigger: 'blur'}],
+          start: [{ required: true, message: '区间起点不能为空', trigger: 'blur'}],
+          end:   [{ required: true, message: '区间终点不能为空', trigger: 'blur'}],
+          line:  [{ required: true, message: '所属线路不能为空', trigger: 'blur'}],
+        },
+      },
+      mounted() {
+        this.initMap()
+        this.initLine()
+        this.initPolyEditor()
+        this.initPolyEditorEvent()
+      },
+      methods: {
+        initMap() {
+          this.map = new AMap.Map('container', { center, zoom })
+        },
+
+        initLine() {
+          this.polyline = new AMap.Polyline({
+            map: this.map,
+            path: path,
+            isOutline: true,
+            outlineColor: '#ffeeff',
+            borderWeight: 3,
+            strokeColor: '#3366FF',
+            strokeOpacity: 1,
+            strokeWeight: 6,
+            // 折线样式还支持 'dashed'
+            strokeStyle: 'solid',
+            // strokeStyle是dashed时有效
+            strokeDasharray: [10, 5],
+            lineJoin: 'round',
+            lineCap: 'round',
+            zIndex: 50,
+          })
+        },
+
+        initPolyEditor() {
+          console.log(this.map, this.polyline)
+          this.polyEditor = new AMap.PolyEditor(this.map, this.polyline)
+        },
+
+        initPolyEditorEvent() {
+          let that = this
+          this.polyEditor.on('end', function (event) {
+            log.info('触发事件： end')
+            const path = that.polyline.getPath()
+            that.arr = _.toArray(path)
+            console.log(that.arr)
+            that.centerDialogVisible = true
+          })
+        },
+
+        refresh() {
+          window.location.reload()
+        },
+        openEditor() {
+          this.polyEditor.open()
+        },
+        closeEditor() {
+          this.polyEditor.close()
+        },
+
+        save() {
+          axios.post('/coordinate', {
+            name:  this.form.name,
+            start: this.form.start,
+            end:   this.form.end,
+            line:  this.form.line,
+            arr:   this.arr,
+          })
+          .then(resp => {
+            console.log(resp)
+            this.$notify.success({
+              title: 'UPLOAD SUCCESS',
+            })
+            this.form.name  = ''
+            this.form.start = ''
+            this.form.end   = ''
+            this.form.line  = ''
+            this.centerDialogVisible = false
+          })
+          .catch(err => {
+            this.$notify.error({
+              title: 'UPLOAD ERROR',
+              message: err,
+            })
+            console.log(err)
+          })
+        }
+      },
+    })
+  
+  </script>
+</body>
+</html>
