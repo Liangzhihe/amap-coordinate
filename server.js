@@ -13,15 +13,16 @@ app.use(bodyParser.json())
 // 返回静态文件
 app.use(express.static('views'))
 
-// 默认: 区间线段--折线
+// 默认：区间线段--曲线
 app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/views/curve.html')
+})
+
+// 区间: 区间线段--折线
+app.get('/polyline', (req, res) => {
   res.sendFile(__dirname + '/views/polyline.html')
 })
 
-// 区间：区间线段--曲线
-app.get('/curve', (req, res) => {
-  res.sendFile(__dirname + '/views/curve.html')
-})
 // 工点：工点--坐标点
 app.get('/marker', (req, res) => {
   res.sendFile(__dirname + '/views/marker.html')

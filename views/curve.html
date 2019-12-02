@@ -46,34 +46,41 @@
         :model="form"
         :rules="rules"
         label-position="right"
-        label-width="80px"
+        label-width="120px"
       >
-        <el-form-item  prop="name" label="区间名称">
+        <el-form-item prop="name" label="区间名称">
           <el-input
             v-model="form.name"
             size="medium"
             placeholder="区间名称"
           ></el-input>
         </el-form-item>
-        <el-form-item  prop="start" label="区间起点">
+        <el-form-item prop="direction" label="区间方向(左/右)">
+          <el-input
+            v-model="form.direction"
+            size="medium"
+            placeholder="区间方向(左/右)"
+          ></el-input>
+        </el-form-item>
+        <el-form-item prop="start" label="区间起点">
           <el-input
             v-model="form.start"
             size="medium"
             placeholder="区间起点"
           ></el-input>
         </el-form-item>
-        <el-form-item  prop="end" label="区间终点">
+        <el-form-item prop="end" label="区间终点">
           <el-input
             v-model="form.end"
             size="medium"
             placeholder="区间终点"
           ></el-input>
         </el-form-item>
-        <el-form-item  prop="line" label="所属线路">
+        <el-form-item prop="line" label="所属线路">
           <el-input
             v-model="form.line"
             size="medium"
-            placeholder="所属线路"
+            placeholder="所属线路(数字)"
           ></el-input>
         </el-form-item>
       </el-form>
@@ -90,8 +97,7 @@
     const zoom = 14
     const path = [
       [114.14697366, 22.5505355],
-      [114.15097366, 22.5495355, 114.15697366, 22.5505355],
-      [114.15997366, 22.5525355, 114.15697366, 22.5525355, 114.16497366, 22.5505355]
+      [114.15997366, 22.5525355, 114.19497366, 22.5505355]
     ]
 
     const app = new Vue({
@@ -102,16 +108,18 @@
         polyEditor: null,
         centerDialogVisible: false,
         form: {
-          name:  '',
-          start: '',
-          end:   '',
-          line:  '',
+          name:      '',
+          direction: '',
+          start:     '',
+          end:       '',
+          line:      '',
         },
         rules: {
-          name:  [{ required: true, message: '区间名称不能为空', trigger: 'blur'}],
-          start: [{ required: true, message: '区间起点不能为空', trigger: 'blur'}],
-          end:   [{ required: true, message: '区间终点不能为空', trigger: 'blur'}],
-          line:  [{ required: true, message: '所属线路不能为空', trigger: 'blur'}],
+          name:       [{ required: true, message: '区间名称不能为空', trigger: 'blur'}],
+          direction:  [{ required: true, message: '区间方向不能为空', trigger: 'blur'}],
+          start:      [{ required: true, message: '区间起点不能为空', trigger: 'blur'}],
+          end:        [{ required: true, message: '区间终点不能为空', trigger: 'blur'}],
+          line:       [{ required: true, message: '所属线路不能为空', trigger: 'blur'}],
         },
       },
       mounted() {
@@ -131,10 +139,10 @@
             path: path,
             isOutline: true,
             outlineColor: '#ffeeff',
-            borderWeight: 3,
+            borderWeight: 1,
             strokeColor: '#3366FF',
             strokeOpacity: 1,
-            strokeWeight: 6,
+            strokeWeight: 3,
             // 折线样式还支持 'dashed'
             strokeStyle: 'solid',
             // strokeStyle是dashed时有效
@@ -173,21 +181,23 @@
 
         save() {
           axios.post('/coordinate', {
-            name:  this.form.name,
-            start: this.form.start,
-            end:   this.form.end,
-            line:  this.form.line,
-            arr:   this.arr,
+            name:      this.form.name,
+            direction: this.form.direction,
+            start:     this.form.start,
+            end:       this.form.end,
+            line:      this.form.line,
+            arr:       this.arr,
           })
           .then(resp => {
             console.log(resp)
             this.$notify.success({
               title: 'UPLOAD SUCCESS',
             })
-            this.form.name  = ''
-            this.form.start = ''
-            this.form.end   = ''
-            this.form.line  = ''
+            this.form.name      = ''
+            this.form.direction = ''
+            this.form.start     = ''
+            this.form.end       = ''
+            this.form.line      = ''
             this.centerDialogVisible = false
           })
           .catch(err => {
