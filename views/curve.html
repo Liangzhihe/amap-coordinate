@@ -39,7 +39,7 @@
     <el-dialog
       title="填写区间信息(贝瑟尔曲线)"
       :visible.sync="centerDialogVisible"
-      width="30%"
+      width="600px"
       center>
       <el-form
         ref="form"
@@ -52,7 +52,7 @@
           <el-input
             v-model="form.name"
             size="medium"
-            placeholder="区间名称"
+            placeholder="区间名称(起点终点需标注左右)"
           ></el-input>
         </el-form-item>
         <el-form-item prop="direction" label="区间方向(左/右)">
